@@ -1,0 +1,268 @@
+import feedparser
+import requests
+from bs4 import BeautifulSoup
+import gensim
+import html2text
+import re
+import string
+import nltk
+nltk.download('punkt')
+from nltk.tokenize import sent_tokenize
+from nltk.tokenize import word_tokenize
+from nltk import RegexpTokenizer
+from nltk.corpus import stopwords
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from nltk.tokenize import word_tokenize
+from gensim.utils import simple_preprocess
+from nltk.tokenize import sent_tokenize
+from nltk.tokenize import word_tokenize
+from gensim.utils import simple_preprocess
+from gensim.parsing.preprocessing import STOPWORDS
+import feedparser
+import requests
+from bs4 import BeautifulSoup
+import gensim
+import html2text
+import re
+import string
+import nltk
+nltk.download('punkt')
+from nltk.tokenize import sent_tokenize
+from nltk.tokenize import word_tokenize
+from nltk import RegexpTokenizer
+from nltk.corpus import stopwords
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+
+from nltk.stem import WordNetLemmatizer, SnowballStemmer
+from nltk.stem.porter import *
+import numpy as np 
+
+import pandas as pd
+
+from sklearn import model_selection 
+from sklearn import preprocessing
+from sklearn import linear_model 
+from sklearn import naive_bayes 
+from sklearn import metrics 
+from sklearn import svm
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn import decomposition 
+from sklearn import ensemble
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+
+from keras.preprocessing import text
+from keras.preprocessing import sequence
+from keras import layers
+from keras import models 
+from keras import optimizers
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+
+ 
+
+r1 = requests.get('https://www.marketwatch.com/rss/')
+r2 = requests.get('https://www.nasdaq.com/services/rss.aspx')
+
+pg1 = BeautifulSoup(r1.content, "html.parser")
+pg2 = BeautifulSoup(r2.content, "html.parser")
+
+
+C1 = pg1.body.get_text()
+C2 = pg2.body.get_text()
+
+
+C3 = str(C1)
+
+def extract_words(s):
+    return [re.sub('^[{0}]+|[{0}]+$'.format(string.punctuation), '', w) for w in s.split()]
+
+words1 = extract_words(C1)
+C4 = str(C2)
+words2 = extract_words(C2)
+
+wordss1 = [words1,words2]
+
+wordss = str(wordss1)
+
+                                                                                                     
+                                                                                                     
+tagged_data = [TaggedDocument(words=word_tokenize(_d.lower()), tags=[str(i)]) for i, _d in enumerate(wordss)]
+
+
+                                                                                                    
+
+                                                                                                     
+
+
+max_epochs = 100
+vec_size = 20
+alpha = 0.025
+
+model = Doc2Vec(size=vec_size,
+               alpha=alpha, 
+               min_alpha=0.00025,
+                min_count=1,
+                dm =1)
+  
+model.build_vocab(tagged_data)
+
+for epoch in range(max_epochs):
+    print('iteration {0}'.format(epoch))
+    model.train(tagged_data,
+                total_examples=model.corpus_count,
+                epochs=model.iter)
+ # decrease the learning rate
+    model.alpha -= 0.0002
+    # fix the learning rate, no decay
+    model.min_alpha = model.alpha
+
+model.save("d2v.model")
+print(model.save("d2v.model"))
+
+from gensim.models.doc2vec import Doc2Vec
+
+model= Doc2Vec.load("d2v.model")
+#to find the vector of a document which is not in training data
+test_data = word_tokenize(" Baidu, alibaba etc".lower())
+v1 = model.infer_vector(test_data)
+print("V1_infer", v1)
+
+
+# to find most similar doc using tags
+similar_doc = model.docvecs.most_similar('1')
+print(similar_doc)
+
+
+
+
+# to find vector of doc in training data using tags or in other words, printing the vector of document at index 1 in training data
+print(model.docvecs['1'])
+
+
+
+print('original document: ')
+
+print(wordss)
+
+labels, texts = [], []
+for i, line in enumerate(wordss.split("\n")):
+    content = line.split()
+    labels.append(content[0])
+    texts.append(content[1:])
+
+# create a dataframe using texts and lables
+trainDF = pd.DataFrame()
+trainDF['text'] = texts
+trainDF['label'] = labels
+
+
+
+# split the dataset into training and validation datasets 
+train_x = model_selection.train_test_split(trainDF['text'], trainDF['label'])
+valid_x = model_selection.train_test_split(trainDF['text'], trainDF['label'])
+train_y = model_selection.train_test_split(trainDF['text'], trainDF['label'])
+valid_y = model_selection.train_test_split(trainDF['text'], trainDF['label'])
+
+
+tk1 = Tokenizer()
+tk1.fit_on_texts(trainDF['text'])
+
+index_list = tk1.texts_to_sequences(trainDF['text'])
+
+x_train = pad_sequences(index_list, maxlen=len(wordss.split('/n')))
+
+tk1.fit_on_texts(trainDF['text'])
+
+index_list1 = tk1.texts_to_sequences(trainDF['text'])
+
+y_train = pad_sequences(index_list1, maxlen=len(wordss.split('/n'))
+                        
+tk1.fit_on_texts(trainDF['text'])
+                        
+index_list2 = tk1.texts_to_sequences(trainDF['text'])
+                        
+y_valid = pad_sequences(index_list2, maxlen=len(wordss.split('/n'))
+                        
+tk1.fit_on_texts(trainDF['text'])
+                        
+index_list3 = tk1.texts_to_sequences(trainDF['text'])
+                        
+x_valid = pad_sequences(index_list3, maxlen=len(wordss.split('/n'))
+
+
+
+embeddings_index = dict()
+f = wordss
+for line in f:
+    values = line.split('/n')
+    word = values[0]
+    coefs = np.asarray(values[1:], dtype='float32')
+    embeddings_index[word] = coefs
+
+
+
+
+# create a tokenizer 
+token = text.Tokenizer()
+token.fit_on_texts(trainDF['text'])
+word_index = token.word_index
+
+
+
+# create token-embedding mapping
+embedding_matrix = np.zeros((len(word_index) + 1, 300))
+for word, i in word_index.items():
+    embedding_vector = embeddings_index.get(word)
+    if embedding_vector is not None:
+        embedding_matrix[i] = embedding_vector
+
+        
+        
+def train_model(classifier, feature_vector_train, label, feature_vector_valid, is_neural_net=False):
+    # fit the training dataset on the classifier
+    classifier.fit(feature_vector_train, label)
+    
+    # predict the labels on validation dataset
+    predictions = classifier.predict(feature_vector_valid)
+    
+    if is_neural_net:
+        predictions = predictions.argmax(axis=-1)
+    
+    return metrics.accuracy_score(predictions, valid_y) 
+
+
+def create_rcnn():
+    
+ # Add an Input Layer
+    input_layer = layers.Input((len(wordss), ))
+
+    # Add the word embedding Layer
+    embedding_layer = layers.Embedding(len(word_index) + 1, 300, weights=[embedding_matrix], trainable=False)(input_layer)
+    embedding_layer = layers.SpatialDropout1D(0.3)(embedding_layer)
+    
+    # Add the recurrent layer
+    rnn_layer = layers.Bidirectional(layers.GRU(50, return_sequences=True))(embedding_layer)
+    
+    # Add the convolutional Layer
+    conv_layer = layers.Convolution1D(100, 3, activation="relu")(embedding_layer)
+
+    # Add the pooling Layer
+    pooling_layer = layers.GlobalMaxPool1D()(conv_layer)
+
+    # Add the output Layers
+    output_layer1 = layers.Dense(50, activation="relu")(pooling_layer)
+    output_layer1 = layers.Dropout(0.25)(output_layer1)
+    output_layer2 = layers.Dense(1, activation="sigmoid")(output_layer1)
+
+    # Compile the model
+    model = models.Model(inputs=input_layer, outputs=output_layer2)
+    model.compile(optimizer=optimizers.Adam(), loss='binary_crossentropy')
+    
+    return model
+
+classifier = create_rcnn()
+accuracy = train_model(classifier, x_train, y_train, y_valid, is_neural_net=True)
+print ("CNN, Word Embeddings",  accuracy)
